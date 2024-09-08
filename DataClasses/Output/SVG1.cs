@@ -39,13 +39,18 @@ public class SVGHelper()
 
     public static string ConvertTwoPointLine(ListOfPointFForDrawing pointFList)
     {
-        string s = $"\t\t\t< path{Environment.NewLine}";
-        s += $"\t\t\t\tfill=\"none\"{Environment.NewLine}";
-        s += $"\t\t\t\tstroke=\"red\"{Environment.NewLine}";
-        s += $"\t\t\t\td=\"M {pointFList[0].X},{pointFList[0].Y}{Environment.NewLine}";
-        s += $"\t\t\t\tL {pointFList[1].X},{pointFList[1].Y}\"{Environment.NewLine}";
-        s += $"\t\t\t/>{Environment.NewLine}";
+//I fixed this output to work in Edge.
+        string s = $"\t\t\t\t<path style=\"fill:none;stroke:{pointFList.Pen.Color.Name.ToLower()};stroke-width:1\" ";
+        s += $"d=\"M {pointFList[0].X},{pointFList[0].Y} ";
+        s += $"L {pointFList[1].X},{pointFList[1].Y}\"";
+        s += $"/>{Environment.NewLine}";
         return s;
+    }
+    public static string SVGText(PointF position, string text) {
+        //string s = $"\t\t\t\t<text x=\"{position.X}\" y=\"{position.Y}\" font: italic 13px sans-serif;>My</{text}>  \"{Environment.NewLine} ";
+        string s = $"\t\t\t\t<text x=\"{position.X}\" y=\"{position.Y}\" fill=\"black\" stroke=\"black\" font-size=\"1.5\" >{text}</text>{Environment.NewLine}";
+        return s;
+
     }
     public static string ConvertTwoPointLine(WorkingTile thisTile, GridPoint startpoint, GridPoint endpoint)
     {
@@ -85,12 +90,11 @@ public class SVGHelper()
     }
     public static string ConvertCurve(ListOfPointFForDrawing pointFList)
     {
-        string s = $"\t\t\t< path{Environment.NewLine}";
-        s += $"\t\t\t\tfill=\"none\"{Environment.NewLine}";
-        s += $"\t\t\t\tstroke=\"red\"{Environment.NewLine}";
-        s += $"\t\t\t\td=\"M {pointFList[0].X },{pointFList[0].Y }{Environment.NewLine}";
-        s += $"\t\t\t\tC {pointFList[1].X},{pointFList[1].Y } {pointFList[2].X },{pointFList[2].Y } {pointFList[3].X },{pointFList[3].Y }\"{Environment.NewLine}";
-        s += $"\t\t\t/>{Environment.NewLine}";
+        //I fixed this output to work in Edge.
+        string s = $"\t\t\t\t<path style=\"fill:none;stroke:{pointFList.Pen.Color.Name.ToLower()};stroke-width:1\" ";
+        s += $"d=\"M {pointFList[0].X },{pointFList[0].Y } ";
+        s += $"C {pointFList[1].X},{pointFList[1].Y } {pointFList[2].X },{pointFList[2].Y } {pointFList[3].X },{pointFList[3].Y }\"";
+        s += $"/>{Environment.NewLine}";
         return s;
     }
 

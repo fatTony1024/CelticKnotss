@@ -26,13 +26,13 @@
         ///  Required method for Designer support - do not modify
         ///  the contents of this method with the code editor.
         /// </summary>
-        private void InitializeComponent()
-        {
+        private void InitializeComponent() {
             pictureBox1 = new PictureBox();
             buttonDrawAll = new Button();
             buttonClipboard = new Button();
             buttonOverlayed = new Button();
             buttonTest = new Button();
+            ButtonTest2 = new Button();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             SuspendLayout();
             // 
@@ -86,11 +86,22 @@
             buttonTest.UseVisualStyleBackColor = true;
             buttonTest.Click += ButtonTest_Click;
             // 
+            // ButtonTest2
+            // 
+            ButtonTest2.Location = new Point(31, 360);
+            ButtonTest2.Name = "ButtonTest2";
+            ButtonTest2.Size = new Size(112, 34);
+            ButtonTest2.TabIndex = 5;
+            ButtonTest2.Text = "Test2";
+            ButtonTest2.UseVisualStyleBackColor = true;
+            ButtonTest2.Click += ButtonTest2_Click;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1332, 807);
+            Controls.Add(ButtonTest2);
             Controls.Add(buttonTest);
             Controls.Add(buttonOverlayed);
             Controls.Add(buttonClipboard);
@@ -109,5 +120,6 @@
         private Button buttonClipboard;
         private Button buttonOverlayed;
         private Button buttonTest;
+        private Button ButtonTest2;
     }
 }

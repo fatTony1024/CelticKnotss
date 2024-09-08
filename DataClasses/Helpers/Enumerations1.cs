@@ -8,8 +8,7 @@ using System.Threading.Tasks;
 
 namespace CelticKnots;
 
-public enum E_OutlineCap
-{
+public enum E_OutlineCap {
     [Description("Do not return a cap, Default for on screen.")]
     NoCap = 0,
     [Description("Cap the Left and Right Start points.")]
@@ -17,24 +16,24 @@ public enum E_OutlineCap
     [Description("Cap the Left and Right End points.")]
     End = 2
 }
-public enum E_OutlineType
-{
+public enum E_OutlineType {
     [Description("None or Undefined.")]
-    None = 0,
+    None,
+    [Description("The outlone of the tile.")]
+    Outline,
     [Description("Middle Point (12) Default for on screen.")]
-    Centre = 1,
+    Centre,
     [Description("Left path from start (before rotation clockwise from the top centre).")]
-    Left = 2,
+    Left,
     [Description("Left path from start (before rotation clockwise from the top centre).")]
-    Right = 3,
+    Right ,
     [Description("A FullOutline Left and Right Paths with Caps.")]
-    FullOutline = 4,
+    FullOutline ,
     [Description("Just the Caps.")]
-    Cap = 5
+    Cap 
 }
 
-public enum E_OfsetPointHorizontal
-{
+public enum E_OffsetPointHorizontal {
     [Description("Left of centre")]
     Left,
     [Description("Midpoint")]
@@ -42,8 +41,7 @@ public enum E_OfsetPointHorizontal
     [Description("Right of centre")]
     Right
 }
-public enum E_OfsetPointVertical
-{
+public enum E_OfsetPointVertical {
     [Description("Above Normal")]
     Top,
     [Description("Normal, Centred")]
@@ -51,44 +49,41 @@ public enum E_OfsetPointVertical
     [Description("Below Normal")]
     Bottom
 }
-public enum E_TileLineType
-{
+public enum E_TileLineType {
     [Description("Without data")]
-    Empty = 0,
+    Empty,
     [Description("A standing cross")]
-    Cross = 1,
+    Cross,
     [Description("An X shape")]
-    DiagonalCross = 2,
+    DiagonalCross,
     [Description("A horizontal bar")]
-    Bar = 3,
+    Bar,
+    [Description("A diagonal bar")]
+    DiagonalBar,
     [Description("Two ninety-degree curve between adjacent mid points")]
-    MidPoints = 4, //4 and above consit of curves, they have 2 points each with a control point.
+    MidPoints, //4 and above consit of curves, they have 2 points each with a control point.
     [Description("Two curves between top and bottom corners")]
-    Corners = 5,
+    Corners,
     [Description("A ninety-degree curve between adjacent mid points.")]
-    HalfMid = 6,
+    HalfMid,
     [Description("A centre mid-point to opposite corner")]
-    MidToCorner = 7,
+    MidToCorner,
     //TC 24/08/24 Missed this one.
     [Description("A curve between top and bottom corners")]
-    HalfCorners = 8
+    HalfCorners
 }
-public enum E_TileWeave
-{
+public enum E_TileWeave {
     //the corners can be woven. I need to do for this.
     [Description("Without data or irrelevant ")]
     NoWeave = 0,
     [Description("The primary line goes over the second")]
-    OverWeave = 1,
+    OverWeave,
     [Description("The primary line goes under the second")]
-    UnderWeave = 2
+    UnderWeave 
 }
-public enum E_TileRotation
-{
+public enum E_TileRotation {
     [Description("Without rotation or irrelevant")]
     NoRitation = 0, //Default
-    [Description("45 degree rotation")]
-    RotatedFourtyFiveDegrees = 45,  //Might use
     [Description("90 degree rotation")]
     RotatedNinetyDegrees = 90,
     [Description("180 degree rotation")]
@@ -96,8 +91,7 @@ public enum E_TileRotation
     [Description("270 degree rotation")]
     RotatedTwoSeventyDegrees = 270
 }
-public enum E_LinePoint
-{
+public enum E_LinePoint {
     //E_LinePoint needs to be a class, it needs properties and methods.
     //Name
     //Number
@@ -157,8 +151,7 @@ public enum E_LinePoint
 
 
 
-public static class EnumerationHelper
-{
+public static class EnumerationHelper {
     ////this looked like a good idea
     ////https://stackoverflow.com/questions/14971631/convert-an-enum-to-liststring
     //public static string GetDescription(this Enum value)
@@ -185,25 +178,45 @@ public static class EnumerationHelper
 
     //}
 
-    private static string GetEnumDescription(Enum value)
-    {
+    private static string GetEnumDescription(Enum value) {
         //https://stackoverflow.com/questions/2650080/how-to-get-c-sharp-enum-description-from-value
         FieldInfo? fi = value.GetType().GetField(value.ToString());
         //DescriptionAttribute[]? attributes = fi?.GetCustomAttributes(typeof(DescriptionAttribute), false) as DescriptionAttribute[];
-        if (fi?.GetCustomAttributes(typeof(DescriptionAttribute), false) is DescriptionAttribute[] attributes && attributes.Length != 0)
-        {
+        if (fi?.GetCustomAttributes(typeof(DescriptionAttribute), false) is DescriptionAttribute[] attributes && attributes.Length != 0) {
             return attributes.First().Description;
         }
 
         return value.ToString();
     }
-    public static string GetDescription<TEnum>(this TEnum EnumValue) where TEnum : struct
-    {
+    public static string GetDescription<TEnum>(this TEnum EnumValue) where TEnum : struct {
         return EnumerationHelper.GetEnumDescription((Enum)(object)((TEnum)EnumValue));
     }
-    public static string GetEnumName<TEnum>(this TEnum EnumValue) where TEnum : struct
-    {
+    public static string GetEnumName<TEnum>(this TEnum EnumValue) where TEnum : struct {
         return Enum.GetName(typeof(TEnum), EnumValue) ?? string.Empty;
     }
-}
 
+
+
+}
+//give this a go sometime
+//https://stackoverflow.com/questions/15388072/how-to-add-extension-methods-to-enums
+public static class EnumExtensions {
+    public static int ToInt<T>(this T soure) where T : IConvertible//enum
+    {
+        if (!typeof(T).IsEnum)
+            throw new ArgumentException("T must be an enumerated type");
+
+        return (int)(IConvertible)soure;
+    }
+
+    //ShawnFeatherly funtion (above answer) but as extention method
+    public static int Count<T>(this T soure) where T : IConvertible//enum
+    {
+        if (!typeof(T).IsEnum)
+            throw new ArgumentException("T must be an enumerated type");
+
+        return Enum.GetNames(typeof(T)).Length;
+    }
+
+
+}
