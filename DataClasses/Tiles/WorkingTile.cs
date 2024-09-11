@@ -39,8 +39,8 @@ public class WorkingTile {
         X = x;
         Y = y;
         double DiagonalTileWidth = LinePointHelper.DistanceBetweenPoints(new PointF(0, 0), new PointF((float)TileProperties.Width, (float)TileProperties.Height));
-        XOffset = (float)DiagonalTileWidth * X;//= 0;
-        YOffset = (float)DiagonalTileWidth * Y / 2;//= 0;
+        XOffset = (float)DiagonalTileWidth * X;
+        YOffset = (float)DiagonalTileWidth * Y / 2;
         if (Y % 2 == 0) {
             XOffset -= (float)(DiagonalTileWidth / 2);
         }
