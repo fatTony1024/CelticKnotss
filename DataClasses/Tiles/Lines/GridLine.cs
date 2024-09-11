@@ -7,24 +7,101 @@ using System.Threading.Tasks;
 
 namespace CelticKnots;
 
-public class GridLines() : List<GridLine> {
-    //GridLine
+public class TileLineGroups() : List<GridLineGroup> {
+    //TileLineGroups represent all the lines on a tile.
+    //Each GridLineGroup is a connected Line, set of lines or A single Curve.
+
+
+    //I may just return the groupnumber, we will see.
+    public GridLineGroup AddLineGroups(GridLineGroup linesGroup) {
+        GridLineGroup? existingGroup = Find(group => group.GroupNumber == linesGroup.GroupNumber);
+        if (existingGroup != null) {
+            foreach (GridLine line in linesGroup) {
+                existingGroup.AddLine(line);
+            }
+            return existingGroup;
+        }
+        //If not add a new group. we already have a number anf it doesn't already exist.
+        Add(linesGroup);
+        return linesGroup;    //With the group number.
+    }
+    public GridLineGroup AddLine(int groupNumbr, GridLine gridLine) {
+        GridLineGroup linesGroup = [];
+        linesGroup.GroupNumber = groupNumbr;
+        linesGroup.Add(gridLine);
+        return AddLineGroups(linesGroup);
+    }
+    public GridLineGroup AddLines(int groupNumbr, params GridLine[] gridLines) {
+        GridLineGroup? existingGroup = Find(group => group.GroupNumber == groupNumbr);
+        if (existingGroup != null) {
+            foreach (GridLine line in gridLines) {
+                existingGroup.AddLine(line);
+            }
+            return existingGroup;
+        }
+        //If not add a new group.
+        GridLineGroup LineGroup = [];
+        foreach (GridLine line in gridLines) {
+            LineGroup.Add(line);
+        }
+        LineGroup.GroupNumber = groupNumbr;
+        Add(LineGroup);  //If it was an existing group we wiuld have done them above.
+        return LineGroup;
+    }
+    public GridLineGroup AddLinesToNewGroup(params GridLine[] gridLines) {
+        GridLineGroup LineGroup = [];
+        LineGroup.AddRange(gridLines);
+        return AddLinesToNewGroup(LineGroup);
+    }
+    public GridLineGroup AddLinesToNewGroup(GridLineGroup gridLines) {
+        gridLines.GroupNumber = GetNextGroupNumber();
+        Add(gridLines);
+        return gridLines;   
+    }
+
+    public GridLine? GetLine(int Group, E_TileLineType ttype, E_LinePoint lineFrom, E_LinePoint lineTo) {
+
+        GridLineGroup? group = Find(item => item.GroupNumber == Group);
+        if (group == null) {
+            return null;
+        }
+        return group.Find(item => item.TType == ttype && item.MyLinePoints[0].ThisLinePoint == lineFrom && item.MyLinePoints[^1].ThisLinePoint == lineTo);
+    }
+
+        private int GetNextGroupNumber() {
+        if (Count == 0) {
+            return 0;
+        }
+        else {
+            return this.Max(item => item.GroupNumber) + 1;
+        }
+    }
+}
+public class GridLineGroup() : List<GridLine> {
+    public int GroupNumber { get; set; } = 0; //Related lines. 
+    public bool IsCurved { get; set; } = false; //I may keep this an allow a Tile to have both lines and curves.
+
+    //This is wher eI will get the actual coodinates for the lines. PointF
+    //   private List<ListOfPointFForDrawing> GetTileLinePoints(E_OutlineType requestedPoints, bool capped) {
+    //and from the GridLine clas replace    public ListOfPointFForDrawing GetOutlinePointFList(bool flipStart, bool flipDestination, E_OffsetPointHorizontal ofsetpointhorizontal, int midPointRotation)
+    //the GridLineGroup knows all the lines in a group and so can align them better to each other.
     public GridLine AddLine(GridLine line) {
+        //if (GroupNumber != groupNumber) {
+        //    throw new Exception("Group Number does not match");
+        //}
         Add(line);
         return line;
     }
-    //TC 17/08/24
+    //TC 17/08/24 TC 10/08/24 I will be removing this when I start using the Tile Groups
     public int CountGroup(int group) {
         return this.Count(item => item.LineGroupNumber == group);
     }
 }
 
-
-
 public class GridLine {
     //I need to know the lines in a tile that are related, there can be up to three lines in a set and maybe two sets.
-    public int LineGroupNumber { get; set; } = 0; //Some lines are related. 
-    public bool IsCurved { get; set; }
+    public int LineGroupNumber { get; set; } = 0; //***Remove
+    public bool IsCurved { get; set; }   //***Remove
     public ExtendedLinePoints MyLinePoints { get; set; } = [];
     //I finally gave in and added the tile type for the points in the on MidPoints and HalfMid, should have done this a while ago, but these two just draw wrong. 
     public E_TileLineType TType { get; set; } = E_TileLineType.Empty;
@@ -66,6 +143,31 @@ public class GridLine {
         }
         LineGroupNumber = linegroupnumber;
     }
+    //New 
+    public GridLine(E_TileLineType ttype, E_LinePoint lineFrom, E_LinePoint lineTo, E_LinwWeave Underweave = E_LinwWeave.Default, bool iscurved = false) {
+        TType = ttype;
+        if (lineFrom > lineTo)//Sort them.
+        {
+            (lineFrom, lineTo) = (lineTo, lineFrom);  // lineTo and lineFrom are 1 to 9 Top left to bottom right, so the Ccordinates are naturally sorted.
+        }
+        if (IsCurved) {
+            //The control points are added for curved, the first is in the centre of the tile, the last is the same as the endpoint.
+            MyLinePoints.AddPoints(lineFrom, E_LinePoint.MiddleMiddle, lineTo, lineTo);
+        }
+        else {
+            MyLinePoints.AddPoints(lineFrom, lineTo);
+        }
+
+
+        if ((Underweave & E_LinwWeave.UnderWeaveStart) == E_LinwWeave.UnderWeaveStart) {
+            MyLinePoints[0].LinePointProperties.Weave = E_TileWeave.UnderWeave;
+        }
+        if ((Underweave & E_LinwWeave.UnderWeaveEnd) == E_LinwWeave.UnderWeaveEnd) {
+            MyLinePoints[^1].LinePointProperties.Weave = E_TileWeave.UnderWeave;
+        }   
+    }
+
+
     //public ListOfPointFForDrawing GetCap(E_OutlineCap outlineCap)
     //{
     //    ListOfPointFForDrawing pointFList = [];

@@ -156,7 +156,7 @@ public partial class Form1 : Form {
         //Debug.Assert(false);
 
         //Just get a Cross and draw it.
-        StockTile test = new StockTile(E_TileLineType.Cross, E_TileRotation.NoRitation, true, false);
+        StockTile test = new StockTile(E_TileLineType.Cross, E_TileRotation.NoRitation, false, false);
         //StockTile test = new(E_TileLineType.MidPoints, E_TileRotation.RotatedNinetyDegrees, true, false);
         //StockTile test = new StockTile(E_TileLineType.MidToCorner, E_TileRotation.NoRitation, true, false);
         // StockTile test = new StockTile(E_TileLineType.Cross, E_TileRotation.NoRitation, false, false);
@@ -167,7 +167,7 @@ public partial class Form1 : Form {
 
 
         // TODO I am still not 100% happy with the E_TileLineType.MidToCorner The midpoints do not align with the end line.+
-        WorkingTile DrawTile = new(t, test, 0, 0);
+        WorkingTile DrawTile = new(t, test, 1, 1);
         Graphics g = pictureBox1.CreateGraphics();
         //DrawTile.DrawGlyph(g);
         //DrawTile.DrawLeftAndRight(g, false);
@@ -269,6 +269,11 @@ public partial class Form1 : Form {
         Graphics g = pictureBox1.CreateGraphics();
 
         foreach (StockTile s in t.StockTilesList) {
+
+
+            Debug.Assert( s.CompareLines());  //with the intention to remove StockTilesList  might put the Curved property on the TileLineGroups rather than the GridLineGroup
+
+
             DrawTile = new WorkingTile(t, s, Column, Row);
             DrawTile.DrawLeftAndRight(g);
             sOutput += DrawTile.ToSVGPathString(E_OutlineType.FullOutline, true, false);

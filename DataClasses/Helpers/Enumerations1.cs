@@ -72,6 +72,11 @@ public enum E_TileLineType {
     [Description("A curve between top and bottom corners")]
     HalfCorners
 }
+public enum E_LinwWeave {
+    Default = 0, //the Default is OverWeave on Start and End
+    UnderWeaveStart = 1,
+    UnderWeaveEnd = 2  //So 3 is UnderWeave on Start and End
+}
 public enum E_TileWeave {
     //the corners can be woven. I need to do for this.
     [Description("Without data or irrelevant ")]

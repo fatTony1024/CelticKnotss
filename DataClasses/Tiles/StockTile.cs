@@ -47,9 +47,13 @@ public class StockTile {
     public bool IsCurved = false;
     public E_TileRotation TRotation { get; set; }
     public bool Flipped { get; set; }
-    public GridLines MyGridLines { get; set; }   // These are the lines that I will finally draw - (NOTE: TC08/08/24 not the ones I will fianlly draw but the centrelines)
-                                                 // The Weeave, Rotation and Flip determine the line that needs splitting for the
-                                                 // Cross and Diagonal cross
+    public GridLineGroup MyGridLines { get; set; }   // These are the lines that I will finally draw - (NOTE: TC08/08/24 not the ones I will fianlly draw but the centrelines)
+                                                     // The Weeave, Rotation and Flip determine the line that needs splitting for the
+                                                     // Cross and Diagonal cross
+
+    //This will replace MyGridLines
+    public TileLineGroups MyTileGroups { get; set; } //This is the group of lines that will be drawn on the canvas. (The lines that will be drawn on the canvas)
+
 
     //I need to Get the points from a Valid line of the same shape. I wil make a new one the Caps may need to be altered.
     //I need a funtion to rebuild the points when the caps change -- I will trigger it so it doen't fire more than it needs to.
@@ -61,7 +65,17 @@ public class StockTile {
         return $"Tile {TileIndex}){TType}\n\t{TRotation} {(IsCurved ? "Curved" : "Straight")}-{(Flipped ? "Flipped" : "Unflipped")}";
     }
 
-
+    public bool CompareLines() {
+        //Compare the lines in the group to the lines in MyGridLines having the same group number (I may need to change this as the group may not be the same number - although I think it is.)
+        foreach (GridLine l in MyGridLines) {
+            GridLine? gl = MyTileGroups.GetLine(l.LineGroupNumber, l.TType, l.MyLinePoints[0].ThisLinePoint,l.MyLinePoints[^1].ThisLinePoint);
+            if (gl == null) {
+                return false;
+            }
+        }
+        //all found
+        return true;
+    }
     public StockTile(E_TileLineType ttype, E_TileRotation tilerotation, bool curved, bool flipped) {
         //Make them all once and reuse them, (it didn't work like that)
 
@@ -73,6 +87,7 @@ public class StockTile {
         Flipped = flipped;
         //Make the MyGridLines 
         MyGridLines = [];
+        MyTileGroups = [];
         GridLine line;
         IsCurved = curved;
 
@@ -93,11 +108,26 @@ public class StockTile {
             MyGridLines.AddLine(line);
             line = new GridLine(TType, E_LinePoint.MiddleMiddle, E_LinePoint.BottomMiddle, IsCurved, 0);
             line.MyLinePoints[0].LinePointProperties.Weave = E_TileWeave.UnderWeave;
+
+
+
+
             MyGridLines.AddLine(line);
             line = new GridLine(TType, E_LinePoint.MiddleLeft, E_LinePoint.MiddleMiddle, IsCurved, 1);
             MyGridLines.AddLine(line);
             line = new GridLine(TType, E_LinePoint.MiddleMiddle, E_LinePoint.MiddleRight, IsCurved, 1);
             MyGridLines.AddLine(line);
+
+
+            //New -- IsCurved on the group defaults to False
+            MyTileGroups.AddLinesToNewGroup( //Should be Group 0
+                        new GridLine(TType, E_LinePoint.TopMiddle, E_LinePoint.MiddleMiddle),
+                        new GridLine(TType, E_LinePoint.MiddleMiddle, E_LinePoint.BottomMiddle, E_LinwWeave.UnderWeaveEnd)
+                        );
+            MyTileGroups.AddLinesToNewGroup(//Should be Group 1
+                        new GridLine(TType, E_LinePoint.MiddleLeft, E_LinePoint.MiddleMiddle, E_LinwWeave.UnderWeaveStart),
+                        new GridLine(TType, E_LinePoint.MiddleMiddle, E_LinePoint.MiddleRight)
+                        );
         }
         else if (TType == E_TileLineType.DiagonalCross) {
             //4 lines
@@ -112,16 +142,36 @@ public class StockTile {
             MyGridLines.AddLine(line);
             line = new GridLine(TType, E_LinePoint.MiddleMiddle, E_LinePoint.BottomLeft, IsCurved, 1);
             MyGridLines.AddLine(line);
+
+            //New
+            MyTileGroups.AddLinesToNewGroup(
+                        new GridLine(TType, E_LinePoint.TopLeft, E_LinePoint.MiddleMiddle),
+                        new GridLine(TType, E_LinePoint.MiddleMiddle, E_LinePoint.BottomRight, E_LinwWeave.UnderWeaveEnd)
+                        );
+            MyTileGroups.AddLinesToNewGroup(
+                        new GridLine(TType, E_LinePoint.TopRight, E_LinePoint.MiddleMiddle, E_LinwWeave.UnderWeaveStart),
+                        new GridLine(TType, E_LinePoint.MiddleMiddle, E_LinePoint.BottomLeft)
+                        );
         }
         else if (TType == E_TileLineType.Bar) {
             //1 line
             line = new GridLine(TType, E_LinePoint.TopMiddle, E_LinePoint.BottomMiddle, IsCurved, 0);
             MyGridLines.AddLine(line);
+
+            //New
+            MyTileGroups.AddLinesToNewGroup(
+                        new GridLine(TType, E_LinePoint.TopMiddle, E_LinePoint.BottomMiddle)
+                        );
+
         }
         else if (TType == E_TileLineType.DiagonalBar) {
             //1 line
             line = new GridLine(TType, E_LinePoint.TopLeft, E_LinePoint.BottomRight, IsCurved, 0);
             MyGridLines.AddLine(line);
+            //New
+            MyTileGroups.AddLinesToNewGroup(
+                        new GridLine(TType, E_LinePoint.TopLeft, E_LinePoint.BottomRight)
+                        );
         }
 
         else if (TType == E_TileLineType.MidPoints)//curve
@@ -133,6 +183,14 @@ public class StockTile {
                 MyGridLines.AddLine(line);
                 line = new GridLine(TType, E_LinePoint.MiddleLeft, E_LinePoint.BottomMiddle, IsCurved, 1);
                 MyGridLines.AddLine(line);
+
+                //New
+                MyTileGroups.AddLinesToNewGroup(
+                            new GridLine(TType, E_LinePoint.TopMiddle, E_LinePoint.MiddleRight, E_LinwWeave.Default, IsCurved)
+                            );
+                MyTileGroups.AddLinesToNewGroup(
+                            new GridLine(TType, E_LinePoint.MiddleLeft, E_LinePoint.BottomMiddle, E_LinwWeave.Default, IsCurved)
+                            );
             }
             else {
                 line = new GridLine(TType, E_LinePoint.TopMiddle, E_LinePoint.TopMiddleMiddleSplit, IsCurved, 0);
@@ -148,6 +206,18 @@ public class StockTile {
                 MyGridLines.AddLine(line);
                 line = new GridLine(TType, E_LinePoint.BottomMiddleMiddleSplit, E_LinePoint.BottomMiddle, IsCurved, 1);
                 MyGridLines.AddLine(line);
+
+                //New
+                MyTileGroups.AddLinesToNewGroup(
+                            new GridLine(TType, E_LinePoint.TopMiddle, E_LinePoint.TopMiddleMiddleSplit),
+                            new GridLine(TType, E_LinePoint.TopMiddleMiddleSplit, E_LinePoint.MiddleRightsplit),
+                            new GridLine(TType, E_LinePoint.MiddleRightsplit, E_LinePoint.MiddleRight)
+                            );
+                MyTileGroups.AddLinesToNewGroup(
+                            new GridLine(TType, E_LinePoint.MiddleLeft, E_LinePoint.MiddleLeftsplit),
+                            new GridLine(TType, E_LinePoint.MiddleLeftsplit, E_LinePoint.BottomMiddleMiddleSplit),
+                            new GridLine(TType, E_LinePoint.BottomMiddleMiddleSplit, E_LinePoint.BottomMiddle)
+                            );
             }
         }
         else if (TType == E_TileLineType.Corners)//curve
@@ -158,6 +228,14 @@ public class StockTile {
                 MyGridLines.AddLine(line);
                 line = new GridLine(TType, E_LinePoint.TopRight, E_LinePoint.BottomRight, IsCurved, 1);
                 MyGridLines.AddLine(line);
+
+                //New
+                MyTileGroups.AddLinesToNewGroup(
+                            new GridLine(TType, E_LinePoint.TopLeft, E_LinePoint.BottomLeft, E_LinwWeave.Default, IsCurved)
+                            );
+                MyTileGroups.AddLinesToNewGroup(
+                            new GridLine(TType, E_LinePoint.TopRight, E_LinePoint.BottomRight, E_LinwWeave.Default, IsCurved)
+                            );
             }
             else {
                 //6 straight lines
@@ -174,6 +252,18 @@ public class StockTile {
                 MyGridLines.AddLine(line);
                 line = new GridLine(TType, E_LinePoint.BottomRightMiddleSplit, E_LinePoint.BottomRight, IsCurved, 1);
                 MyGridLines.AddLine(line);
+
+                //New
+                MyTileGroups.AddLinesToNewGroup(
+                            new GridLine(TType, E_LinePoint.TopLeft, E_LinePoint.TopLeftMiddleSplit),
+                            new GridLine(TType, E_LinePoint.TopLeftMiddleSplit, E_LinePoint.BottomLeftMiddleSplit),
+                            new GridLine(TType, E_LinePoint.BottomLeftMiddleSplit, E_LinePoint.BottomLeft)
+                            );
+                MyTileGroups.AddLinesToNewGroup(
+                            new GridLine(TType, E_LinePoint.TopRight, E_LinePoint.TopRightMiddleSplit),
+                            new GridLine(TType, E_LinePoint.TopRightMiddleSplit, E_LinePoint.BottomRightMiddleSplit),
+                            new GridLine(TType, E_LinePoint.BottomRightMiddleSplit, E_LinePoint.BottomRight)
+                            );
             }
         }
         else if (TType == E_TileLineType.HalfMid)//curve
@@ -182,6 +272,11 @@ public class StockTile {
                 //1 Line
                 line = new GridLine(TType, E_LinePoint.TopMiddle, E_LinePoint.MiddleRight, IsCurved, 0);
                 MyGridLines.AddLine(line);
+
+                MyTileGroups.AddLinesToNewGroup(
+                            new GridLine(TType, E_LinePoint.TopMiddle, E_LinePoint.MiddleRight, E_LinwWeave.Default, IsCurved)
+                            );
+
             }
             else {
                 //3 lines
@@ -191,6 +286,12 @@ public class StockTile {
                 MyGridLines.AddLine(line);
                 line = new GridLine(TType, E_LinePoint.MiddleRightsplit, E_LinePoint.MiddleRight, IsCurved, 0);
                 MyGridLines.AddLine(line);
+
+                MyTileGroups.AddLinesToNewGroup(
+                            new GridLine(TType, E_LinePoint.TopMiddle, E_LinePoint.TopMiddleMiddleSplit),
+                            new GridLine(TType, E_LinePoint.TopMiddleMiddleSplit, E_LinePoint.MiddleRightsplit),
+                            new GridLine(TType, E_LinePoint.MiddleRightsplit, E_LinePoint.MiddleRight)
+                            );
             }
         }
         else if (TType == E_TileLineType.MidToCorner)//curve
@@ -199,12 +300,21 @@ public class StockTile {
                 //1 Line
                 line = new GridLine(TType, E_LinePoint.TopMiddle, E_LinePoint.BottomRight, IsCurved, 0);
                 MyGridLines.AddLine(line);
+
+                MyTileGroups.AddLinesToNewGroup(
+                            new GridLine(TType, E_LinePoint.TopMiddle, E_LinePoint.BottomRight, E_LinwWeave.Default, IsCurved)
+                            );
             }
             else {//2 lines
                 line = new GridLine(TType, E_LinePoint.TopMiddle, E_LinePoint.MiddleMiddle, IsCurved, 0);
                 MyGridLines.AddLine(line);
                 line = new GridLine(TType, E_LinePoint.MiddleMiddle, E_LinePoint.BottomRight, IsCurved, 0);
                 MyGridLines.AddLine(line);
+
+                MyTileGroups.AddLinesToNewGroup(
+                            new GridLine(TType, E_LinePoint.TopMiddle, E_LinePoint.MiddleMiddle),
+                            new GridLine(TType, E_LinePoint.MiddleMiddle, E_LinePoint.BottomRight)
+                            );
             }
         }
         else if (TType == E_TileLineType.HalfCorners)//curve
@@ -213,6 +323,10 @@ public class StockTile {
                 //1 curved line
                 line = new GridLine(TType, E_LinePoint.TopLeft, E_LinePoint.BottomLeft, IsCurved, 0);
                 MyGridLines.AddLine(line);
+
+                MyTileGroups.AddLinesToNewGroup(
+                            new GridLine(TType, E_LinePoint.TopLeft, E_LinePoint.BottomLeft, E_LinwWeave.Default, IsCurved)
+                            );
             }
             else {
                 //3 straight lines
@@ -222,6 +336,12 @@ public class StockTile {
                 MyGridLines.AddLine(line);
                 line = new GridLine(TType, E_LinePoint.BottomLeftMiddleSplit, E_LinePoint.BottomLeft, IsCurved, 0);
                 MyGridLines.AddLine(line);
+
+                MyTileGroups.AddLinesToNewGroup(
+                            new GridLine(TType, E_LinePoint.TopLeft, E_LinePoint.TopLeftMiddleSplit),
+                            new GridLine(TType, E_LinePoint.TopLeftMiddleSplit, E_LinePoint.BottomLeftMiddleSplit),
+                            new GridLine(TType, E_LinePoint.BottomLeftMiddleSplit, E_LinePoint.BottomLeft)
+                            );
             }
         }
         else {
@@ -238,6 +358,19 @@ public class StockTile {
                     MyGridLines[i].MyLinePoints[p].LinePointProperties.Weave = l.MyLinePoints[p].LinePointProperties.Weave;
                 }
             }
+
+            for (int g = 0; g < MyTileGroups.Count; g++) {
+                GridLineGroup glg = MyTileGroups[g];
+                for (int lg = 0; lg < glg.Count; lg++) {
+                    GridLine l = glg[lg];
+                    glg[lg] = l.RotateAndFlipClone(tilerotation, flipped);
+                    glg[lg].TType = l.TType; //TC 08/08/24 I will keep onlt the TType, I don't want to keep the LineGroupNumber or the IsCurved on the group.
+                    for (int p = 0; p < glg[lg].MyLinePoints.Count; p++) {
+                        glg[lg].MyLinePoints[p].LinePointProperties.Weave = l.MyLinePoints[p].LinePointProperties.Weave;
+                    }
+                }
+            }
+
         }
     }
     //There will be 9ish baseTiles - some have rotations 
